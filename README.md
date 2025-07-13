@@ -16,4 +16,20 @@ Removes the **For you** timeline tab and forces X/Twitter to stay on **Following
 ## Install (unpacked)
 
 1. Clone or download this repo → you’ll have a folder with  
-   `
+   `manifest.json` · `content.js` · `README.md`.
+2. Chrome address bar → `chrome://extensions`.
+3. Toggle **Developer mode** (top-right).
+4. Click **Load unpacked** → pick this folder.
+5. Refresh X/Twitter – the **For you** tab is managed by the extension as described above.
+
+## Updating
+
+1. Edit `content.js` as needed.
+2. `chrome://extensions` → hit **Reload** under the extension.
+3. Refresh X.
+
+## Packaging (optional)
+
+```bash
+zip -r hide-for-you.zip manifest.json content.js README.md
+```
