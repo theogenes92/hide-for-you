@@ -1,5 +1,5 @@
 /* ----- CONFIG ----- */
-const HIDE_AFTER_MS = 30 * 60 * 1000;               // 30-min demo window
+const HIDE_AFTER_MS = 10 * 60 * 1000;               // 10-min demo window
 
 /* ----- HELPERS ----- */
 function safeSend(seconds) {
@@ -31,55 +31,74 @@ function hideForYou() {
   }
 }
 
-/* ---------- keep header clean without resetting scroll ---------- */
-new MutationObserver(() => {
-  // run only when "For you" tab exists or is currently active
-  const forYouPresent = !!document.querySelector('a[role="tab"]:not([aria-hidden="true"])'+
-                                                ':not([style*="display:none"])' +
-                                                ':not([hidden])'+
-                                                '[aria-selected="true"], a[role="tab"]:not([aria-hidden="true"])'+
-                                                ':not([style*="display:none"])'+
-                                                ':not([hidden])'+
-                                                ':contains("For you")');
-  if (forYouPresent) hideForYou();
-}).observe(document.body, { subtree: true, childList: true });
-
 /* ----- MAIN FLOW ----- */
-chrome.storage.local.get(['startMs', 'hidden'], store => {
-  // first load after extension (re)install -> create start timestamp
-  if (!store.startMs) {
-    chrome.storage.local.set({ startMs: Date.now() });
-    store.startMs = Date.now();
+chrome.storage.local.get(['startMs', 'hidden', 'startDate'], store => {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  // Always reset timer, date, hidden, and elapsed on extension reload (for testing)
+  chrome.storage.local.set({ startMs: Date.now(), startDate: today, hidden: false });
+  store.startMs = Date.now();
+  store.startDate = today;
+  store.hidden = false;
+  let elapsed = 0; // Reset elapsed time
+
+  let timerId = null;
+  let lastActive = Date.now();
+
+  function startTimer() {
+    if (timerId) return;
+    timerId = setInterval(tick, 1000);
+  }
+  function stopTimer() {
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
   }
 
-  // already hidden in this extension run
-  if (store.hidden) {
-    hideForYou();
-    safeSend(0);
-    return;
+  function attachHideObserver() {
+    new MutationObserver(() => {
+      hideForYou();
+    }).observe(document.body, { subtree: true, childList: true });
   }
 
-  const tick = () => {
-    const remaining = Math.max(0, HIDE_AFTER_MS - (Date.now() - store.startMs));
-    // Show minutes remaining (rounded up) with 'm' suffix
-    const minsLeft = Math.ceil(remaining / 60000);
-    safeSend(minsLeft > 0 ? `${minsLeft}m` : '');
-
+  function tick() {
+    // Only count time when tab is visible
+    if (document.visibilityState !== 'visible') return;
+    elapsed += 1000;
+    const remaining = Math.max(0, HIDE_AFTER_MS - elapsed);
+    const secsLeft = Math.ceil(remaining / 1000);
+    safeSend(secsLeft > 0 ? `${secsLeft}s` : '');
     if (remaining === 0) {
       hideForYou();
       chrome.storage.local.set({ hidden: true });
-      clearInterval(timerId);
+      stopTimer();
       safeSend(0);
+      attachHideObserver(); // Only attach after timer expires
     }
-  };
+  }
 
-  tick();                               // run immediately
-  const timerId = setInterval(tick, 1000);
+  // Start timer if not hidden
+  if (!store.hidden) {
+    startTimer();
+  } else {
+    safeSend(0);
+    attachHideObserver(); // Only attach after timer expires
+  }
 
-  // clean up if tab is closed
-  window.addEventListener('beforeunload', () => clearInterval(timerId));
+  // Pause/resume timer based on tab visibility
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && !store.hidden) {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+  });
 
-  // if Twitter re-renders after cutoff, keep it clean
+  // Clean up if tab is closed
+  window.addEventListener('beforeunload', () => stopTimer());
+
+  // If Twitter re-renders after cutoff, keep it clean
   new MutationObserver(() => {
     chrome.storage.local.get('hidden', d => { if (d.hidden) hideForYou(); });
   }).observe(document.body, { subtree: true, childList: true });
