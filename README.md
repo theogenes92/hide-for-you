@@ -1,5 +1,3 @@
-![Hide For You Extension](hide-for-you.png)
-
 # Hide “For you” on X (Twitter) – Chrome Extension
 
 Removes the **For you** timeline tab and forces X/Twitter to stay on **Following**, so you only see what *you* choose to follow. If you have other manual lists that are pinned, you can navigate to those as well.
@@ -13,23 +11,9 @@ Removes the **For you** timeline tab and forces X/Twitter to stay on **Following
 - Even if X/Twitter re-renders the header (which happens frequently), the extension keeps removing the **For you** tab using a MutationObserver, but only after the timer expires.
 - After the cutoff, the **For you** tab stays hidden for the rest of the session (or until the extension is reloaded).
 
+![Hide For You Extension](hide-for-you.png)
+
 ## Install (unpacked)
 
 1. Clone or download this repo → you’ll have a folder with  
-   `manifest.json` · `content.js` · `README.md`.
-2. Chrome address bar → `chrome://extensions`.
-3. Toggle **Developer mode** (top-right).
-4. Click **Load unpacked** → pick this folder.
-5. Refresh X/Twitter – the **For you** tab is managed by the extension as described above.
-
-## Updating
-
-1. Edit `content.js` as needed.
-2. `chrome://extensions` → hit **Reload** under the extension.
-3. Refresh X.
-
-## Packaging (optional)
-
-```bash
-zip -r hide-for-you.zip manifest.json content.js README.md
-```
+   `
