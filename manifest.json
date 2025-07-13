@@ -1,8 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "Hide ‘For you’ on X",
-  "version": "1.0",
-  "description": "Removes the ‘For you’ timeline tab so only your own tabs remain.",
+  "name": "Hide “For you” on X – 30-sec test",
+  "version": "1.2.4",
+  "description": "Gives you 30 s of For-you per extension load, then hides it. Badge counts down live.",
+  "permissions": ["storage"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_icon": {
+      "16": "icon16.png",
+      "32": "icon32.png",
+      "128": "icon128.png"
+    },
+    "default_title": "Seconds before For-you vanishes"
+  },
   "content_scripts": [
     {
       "matches": ["https://x.com/*", "https://twitter.com/*"],
