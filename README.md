@@ -2,6 +2,15 @@
 
 Removes the **For you** timeline tab and forces X/Twitter to stay on **Following**, so you only see what *you* choose to follow. If you have other manual lists that are pinned, you can navigate to those as well.
 
+## How it works
+
+- When you load X (Twitter), you get a **30-minute window** (per extension install or reload) where the **For you** tab is visible and usable.
+- After 30 minutes, the extension automatically removes the **For you** tab from the interface and, if you are viewing it, switches you to **Following**.
+- The extension uses a timer and stores the start time in Chrome's local storage, so reloading the page does **not** reset the timer.
+- The extension icon badge (if enabled) shows a live countdown of how much time is left before **For you** is hidden.
+- Even if X/Twitter re-renders the header (which happens frequently), the extension keeps removing the **For you** tab using a MutationObserver.
+- After the cutoff, the **For you** tab stays hidden for the rest of the session.
+
 ## Install (unpacked)
 
 1. Clone or download this repo → you’ll have a folder with  
@@ -9,12 +18,7 @@ Removes the **For you** timeline tab and forces X/Twitter to stay on **Following
 2. Chrome address bar → `chrome://extensions`.
 3. Toggle **Developer mode** (top-right).
 4. Click **Load unpacked** → pick this folder.
-5. Refresh X/Twitter – the **For you** tab is gone.
-
-## How it works
-
-`content.js` runs after the page loads, deletes any **For you** tabs, and (once) clicks **Following** if the site tries to open **For you**.  
-A `MutationObserver` catches Twitter’s re-renders without spamming clicks, so scrolling doesn’t jump anymore.
+5. Refresh X/Twitter – the **For you** tab is managed by the extension as described above.
 
 ## Updating
 
@@ -26,3 +30,4 @@ A `MutationObserver` catches Twitter’s re-renders without spamming clicks, so 
 
 ```bash
 zip -r hide-for-you.zip manifest.json content.js README.md
+```
