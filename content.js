@@ -32,15 +32,15 @@ function hideForYou() {
 }
 
 /* ----- MAIN FLOW ----- */
-chrome.storage.local.get(['startMs', 'hidden', 'startDate'], store => {
+chrome.storage.local.get(['startMs', 'hidden', 'startDate', 'elapsed'], store => {
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
   // Always reset timer, date, hidden, and elapsed on extension reload (for testing)
-  chrome.storage.local.set({ startMs: Date.now(), startDate: today, hidden: false });
+  chrome.storage.local.set({ startMs: Date.now(), startDate: today, hidden: false, elapsed: 0 });
   store.startMs = Date.now();
   store.startDate = today;
   store.hidden = false;
-  let elapsed = 0; // Reset elapsed time
+  let elapsed = store.elapsed || 0; // Persist elapsed time across tab closes
 
   let timerId = null;
   let lastActive = Date.now();
@@ -66,6 +66,7 @@ chrome.storage.local.get(['startMs', 'hidden', 'startDate'], store => {
     // Only count time when tab is visible
     if (document.visibilityState !== 'visible') return;
     elapsed += 1000;
+    chrome.storage.local.set({ elapsed }); // Persist elapsed time
     const remaining = Math.max(0, HIDE_AFTER_MS - elapsed);
     const secsLeft = Math.ceil(remaining / 1000);
     safeSend(secsLeft > 0 ? `${secsLeft}s` : '');
