@@ -35,11 +35,15 @@ function hideForYou() {
 chrome.storage.local.get(['startMs', 'hidden', 'startDate', 'elapsed'], store => {
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
-  // Always reset timer, date, hidden, and elapsed on extension reload (for testing)
-  chrome.storage.local.set({ startMs: Date.now(), startDate: today, hidden: false, elapsed: 0 });
-  store.startMs = Date.now();
-  store.startDate = today;
-  store.hidden = false;
+  // If it's a new day, reset timer, date, hidden, and elapsed
+  if (store.startDate !== today) {
+    chrome.storage.local.set({ startMs: Date.now(), startDate: today, hidden: false, elapsed: 0 });
+    store.startMs = Date.now();
+    store.startDate = today;
+    store.hidden = false;
+    store.elapsed = 0;
+  }
+
   let elapsed = store.elapsed || 0; // Persist elapsed time across tab closes
 
   let timerId = null;
@@ -68,8 +72,13 @@ chrome.storage.local.get(['startMs', 'hidden', 'startDate', 'elapsed'], store =>
     elapsed += 1000;
     chrome.storage.local.set({ elapsed }); // Persist elapsed time
     const remaining = Math.max(0, HIDE_AFTER_MS - elapsed);
-    const secsLeft = Math.ceil(remaining / 1000);
-    safeSend(secsLeft > 0 ? `${secsLeft}s` : '');
+    let badgeText = '';
+    if (remaining > 60000) {
+      badgeText = `${Math.ceil(remaining / 60000)}m`;
+    } else if (remaining > 0) {
+      badgeText = `${Math.ceil(remaining / 1000)}s`;
+    }
+    safeSend(badgeText);
     if (remaining === 0) {
       hideForYou();
       chrome.storage.local.set({ hidden: true });
